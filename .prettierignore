@@ -1,0 +1,9 @@
+pnpm-lock.yaml
+.next
+coverage
+next-env.d.ts
+playwright-report
+test-results
+# Plan özgün haliyle korunur; prototip tek dosyalık statik HTML.
+docs/plan.md
+docs/tasarim/prototip
