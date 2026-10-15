@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GradeUp Agent Paneli</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fffdf9; --surface:#ffffff; --sunk:#f7f3ec; --line:#e7e0d6; --line-strong:#d3c9b9;
+  --ink:#1c1917; --ink-2:#57534e; --ink-3:#736c66;
+  --accent:#4338ca; --accent-ink:#ffffff; --accent-soft:#eceafc; --accent-line:#c5c1f2;
+  --ok:#15803d; --ok-soft:#e5f3e9;
+  --warn:#935400; --warn-soft:#fcefd2;
+  --err:#b91c1c; --err-soft:#fce9e9;
+  --pend:#a3205f; --pend-soft:#fae6f0;
+  --cat-model:#4338ca; --cat-search:#57534e; --cat-page:#a5b4fc;
+  --shadow:0 12px 40px rgba(28,25,23,.18);
+  --f-head:'Sora',system-ui,sans-serif;
+  --f-body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#12100e; --surface:#1b1815; --sunk:#0e0c0b; --line:#2d2924; --line-strong:#423c35;
+    --ink:#f5f1ea; --ink-2:#bdb5aa; --ink-3:#9a9288;
+    --accent:#a5b4fc; --accent-ink:#14123a; --accent-soft:#23233f; --accent-line:#3b3f7a;
+    --ok:#4ade80; --ok-soft:#12261a; --warn:#fbbf24; --warn-soft:#2c2209;
+    --err:#f87171; --err-soft:#2d1514; --pend:#f0abcf; --pend-soft:#2c1423;
+    --cat-model:#a5b4fc; --cat-search:#a8a29e; --cat-page:#4a4f94;
+    --shadow:0 12px 40px rgba(0,0,0,.6); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#12100e; --surface:#1b1815; --sunk:#0e0c0b; --line:#2d2924; --line-strong:#423c35;
+  --ink:#f5f1ea; --ink-2:#bdb5aa; --ink-3:#9a9288;
+  --accent:#a5b4fc; --accent-ink:#14123a; --accent-soft:#23233f; --accent-line:#3b3f7a;
+  --ok:#4ade80; --ok-soft:#12261a; --warn:#fbbf24; --warn-soft:#2c2209;
+  --err:#f87171; --err-soft:#2d1514; --pend:#f0abcf; --pend-soft:#2c1423;
+  --cat-model:#a5b4fc; --cat-search:#a8a29e; --cat-page:#4a4f94;
+  --shadow:0 12px 40px rgba(0,0,0,.6); color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 var(--f-body);font-feature-settings:'tnum','cv11';-webkit-font-smoothing:antialiased}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+h1,h2,h3{font-family:var(--f-head);font-weight:600;margin:0;letter-spacing:-.015em;line-height:1.2}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-2)} .faint{color:var(--ink-3)}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:16px 12px;border-right:1px solid var(--line);background:var(--bg)}
+.brand{display:flex;align-items:center;gap:8px;padding:4px 8px 16px;font:600 17px var(--f-head);letter-spacing:-.02em;text-decoration:none}
+.brand i{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;background:var(--accent);color:var(--accent-ink)}
+.brand small{font:500 12px var(--f-body);color:var(--ink-3);letter-spacing:0;margin-left:2px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;height:32px;padding:0 8px;border-radius:6px;text-decoration:none;color:var(--ink-2);font-weight:500}
+.nav a:hover{background:var(--sunk);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.nav a[aria-disabled="true"]{opacity:.55;cursor:default}
+.nav a[aria-disabled="true"]:hover{background:none;color:var(--ink-2)}
+.nav .badge{margin-left:auto;min-width:20px;height:18px;padding:0 6px;border-radius:9px;background:var(--pend);color:var(--bg);font-size:11px;font-weight:600;display:grid;place-items:center}
+.side .grow{flex:1}
+.me{display:flex;gap:8px;align-items:center;padding:8px;border-top:1px solid var(--line);margin:0 -12px;padding-inline:20px}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:600;font-size:12px;flex:none}
+.me div{min-width:0;line-height:1.3} .me b{display:block;font-weight:500;font-size:13px} .me span{font-size:12px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;height:52px;padding:0 24px;border-bottom:1px solid var(--line)}
+.crumb{font-weight:500;color:var(--ink-2);display:flex;gap:8px;align-items:center;min-width:0;white-space:nowrap;overflow:hidden}
+.crumb b{color:var(--ink);font-weight:600}
+.top .sp{flex:1}
+.kbtn{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink-2)}
+.kbtn:hover{border-color:var(--ink-3)}
+kbd{font:500 11px var(--f-body);padding:1px 5px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;background:var(--surface);color:var(--ink-2)}
+.iconbtn{display:grid;place-items:center;width:32px;height:32px;border:1px solid transparent;border-radius:8px;background:none;color:var(--ink-2)}
+.iconbtn:hover{background:var(--sunk);color:var(--ink)}
+.page{padding:24px;max-width:1280px;width:100%}
+.ic{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- common ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);font-weight:500;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.btn.danger{color:var(--err);border-color:var(--err-soft)}
+.btn.danger:hover{background:var(--err-soft);border-color:var(--err)}
+.btn kbd{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.35);color:inherit}
+.btn.primary kbd{color:var(--accent-ink)}
+.btn.ok kbd{color:var(--bg)}
+.st{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:11px;font-size:12px;font-weight:500;white-space:nowrap}
+.st .ic{width:12px;height:12px;stroke-width:2.2}
+.st.running{background:var(--accent-soft);color:var(--accent)}
+.st.done{background:var(--ok-soft);color:var(--ok)}
+.st.budget{background:var(--warn-soft);color:var(--warn)}
+.st.error{background:var(--err-soft);color:var(--err)}
+.st.pending{background:var(--pend-soft);color:var(--pend)}
+.st.neutral{background:var(--sunk);color:var(--ink-2)}
+.pulse{width:8px;height:8px;border-radius:50%;background:currentColor;position:relative;flex:none}
+.pulse::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1.5px solid currentColor;opacity:0;animation:ping 1.8s ease-out infinite}
+@keyframes ping{0%{transform:scale(.5);opacity:.7}100%{transform:scale(1.4);opacity:0}}
+.pagehead{display:flex;align-items:flex-end;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.pagehead h1{font-size:22px}
+.pagehead p{margin:4px 0 0;color:var(--ink-2)}
+.pagehead .sp{flex:1}
+.secthead{display:flex;align-items:baseline;gap:12px;margin:32px 0 8px}
+.secthead h2{font-size:15px}
+.secthead a{margin-left:auto;color:var(--accent);font-weight:500;text-decoration:none}
+.secthead a:hover{text-decoration:underline}
+
+.bar{height:6px;border-radius:3px;background:var(--sunk);box-shadow:inset 0 0 0 1px var(--line);overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+
+/* ---------- overview ---------- */
+.inbox{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.inbox-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:24px;padding:24px;border-bottom:1px solid var(--line);align-items:center}
+.inbox-main h2{font-size:30px;letter-spacing:-.025em}
+.inbox-main p{margin:8px 0 16px;color:var(--ink-2);max-width:52ch}
+.peek{list-style:none;margin:0;padding:0;border-left:1px solid var(--line);padding-left:24px}
+.peek li a{display:flex;gap:12px;align-items:center;padding:8px 0;text-decoration:none;border-bottom:1px solid var(--line)}
+.peek li:last-child a{border:0}
+.peek li a:hover b{color:var(--accent)}
+.peek b{font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score{display:inline-grid;place-items:center;min-width:32px;height:22px;padding:0 6px;border-radius:6px;background:var(--sunk);font-weight:600;font-size:12px}
+.score.hi{background:var(--ok-soft);color:var(--ok)} .score.lo{background:var(--warn-soft);color:var(--warn)}
+.alerts{list-style:none;margin:0;padding:0}
+.alerts li{display:flex;gap:12px;align-items:center;padding:12px 24px;border-bottom:1px solid var(--line)}
+.alerts li:last-child{border:0}
+.alerts .ic{color:var(--warn)} .alerts .err .ic{color:var(--err)}
+.alerts span{flex:1;min-width:0}
+.alerts li>span:first-child{flex:none;display:grid}
+.alerts a{color:var(--accent);font-weight:500;text-decoration:none;white-space:nowrap}
+.alerts a:hover{text-decoration:underline}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:32px;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line)}
+.metric{padding:16px 20px 16px 0;margin-right:20px;border-right:1px solid var(--line)}
+.metric:last-child{border:0;margin:0}
+.metric dt{color:var(--ink-2);font-weight:500}
+.metric dd{margin:4px 0 0}
+.metric .big{font:600 26px/1.2 var(--f-head);letter-spacing:-.025em;display:block}
+.metric small{display:block;margin-top:6px;color:var(--ink-3);font-size:12px}
+.metric .bar{margin-top:10px}
+.delta-ok{color:var(--ok);font-weight:500}
+.spark{display:block;margin-top:8px}
+
+.tablewrap{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--ink-2);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--bg)}
+td{padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+th.r,td.r{text-align:right}
+tbody tr.link{cursor:pointer}
+tbody tr.link:hover td{background:var(--accent-soft)}
+td .who b{font-weight:600;display:block} td .who span{color:var(--ink-3);font-size:12px}
+.mini{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.mini .bar{width:64px}
+.mini .bar i{background:var(--accent)} .mini .bar.hot i{background:var(--warn)}
+
+/* ---------- run detail ---------- */
+.runhead{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.runhead h1{font-size:22px}
+.runmeta{margin:4px 0 0;color:var(--ink-2)}
+.runmeta span+span::before{content:"";display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--ink-3);margin:0 8px;vertical-align:middle}
+.budget{position:sticky;top:0;z-index:5;margin:20px -24px 0;padding:12px 24px;background:var(--bg);border-bottom:1px solid var(--line)}
+.budget-row{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.budget-row .amt{font:600 22px var(--f-head);letter-spacing:-.02em}
+.budget-row .of{color:var(--ink-2)}
+.budget-row .right{margin-left:auto;color:var(--ink-2)}
+.budget .bar{height:10px;border-radius:5px;margin-top:8px;position:relative}
+.legend{display:flex;gap:16px;margin-top:8px;font-size:12px;color:var(--ink-2);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px}
+.counts{display:flex;gap:32px;padding:16px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.counts div b{font:600 18px var(--f-head);display:block}
+.counts div span{color:var(--ink-2);font-size:12px}
+.runbody{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:32px;margin-top:16px;align-items:start}
+.filters{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap}
+.chip{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--line);background:none;color:var(--ink-2);font-weight:500}
+.chip:hover{border-color:var(--line-strong);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.tl{list-style:none;margin:0;padding:0}
+.tl li{position:relative}
+.step{display:grid;grid-template-columns:44px 24px minmax(0,1fr) 60px;gap:0 8px;width:100%;text-align:left;background:none;border:0;border-left:2px solid transparent;border-radius:0 8px 8px 0;padding:8px 8px 8px 0}
+.step:hover{background:var(--sunk)}
+.step[aria-pressed="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.step .t{color:var(--ink-3);font-size:12px;padding-top:2px;text-align:right}
+.step .rail{position:relative;display:flex;justify-content:center}
+.step .rail::before{content:"";position:absolute;top:-8px;bottom:-8px;width:1px;background:var(--line-strong)}
+.tl li:first-child .rail::before{top:14px}
+.tl li:last-child .rail::before{bottom:auto;height:22px}
+.tl li.live:last-child .rail::before{bottom:-8px;height:auto;background:repeating-linear-gradient(var(--line-strong) 0 4px,transparent 4px 8px)}
+.node{position:relative;z-index:1;margin-top:1px;display:grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line-strong);color:var(--ink-2)}
+.node .ic{width:11px;height:11px;stroke-width:2}
+.node.search{color:var(--cat-search)} .node.fetch{color:var(--accent);border-color:var(--accent-line)}
+.node.save{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.node.draft{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.node.approval{background:var(--pend-soft);color:var(--pend);border-color:transparent}
+.node.error{background:var(--err-soft);color:var(--err);border-color:transparent}
+.node.live{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+.step .what{min-width:0}
+.step .what b{font-weight:600;display:block}
+.step .what span{color:var(--ink-2);display:block;overflow-wrap:anywhere}
+.step .what .tool{font-weight:500;color:var(--ink-3);font-size:12px;margin-right:6px}
+.step .cost{text-align:right;color:var(--ink-2);font-size:12px;padding-top:2px}
+.step .cost.zero{color:var(--ink-3)}
+.panel{position:sticky;top:150px;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.panel header{padding:16px;border-bottom:1px solid var(--line)}
+.panel header h3{font-size:15px;margin-top:6px}
+.panel header .tool{color:var(--ink-3);font-size:12px;font-weight:500}
+.panel dl{margin:0;padding:8px 16px}
+.panel dl div{padding:8px 0;border-bottom:1px solid var(--line)}
+.panel dl div:last-child{border:0}
+.panel dt{color:var(--ink-3);font-size:12px}
+.panel dd{margin:2px 0 0;overflow-wrap:anywhere}
+.panel .src{padding:12px 16px 16px;border-top:1px solid var(--line);background:var(--bg)}
+.panel .src h4{margin:0 0 8px;font-size:12px;font-weight:500;color:var(--ink-3)}
+.srclink{display:flex;gap:8px;align-items:center;padding:6px 0;text-decoration:none;color:var(--accent);font-weight:500;overflow-wrap:anywhere}
+.srclink:hover{text-decoration:underline}
+
+/* ---------- approval queue ---------- */
+.queue{display:grid;grid-template-columns:300px minmax(0,1fr) 320px;border:1px solid var(--line);border-radius:12px;background:var(--surface);min-height:640px;overflow:hidden}
+.q-list{border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.tabs{display:flex;padding:0 8px;border-bottom:1px solid var(--line)}
+.tabs button{height:40px;padding:0 8px;white-space:nowrap;background:none;border:0;border-bottom:2px solid transparent;color:var(--ink-2);font-weight:500}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button span{color:var(--ink-3);margin-left:4px}
+.q-items{list-style:none;margin:0;padding:0;overflow:auto;flex:1}
+.q-item{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-left:3px solid transparent;background:none;padding:12px 12px 12px 12px}
+.q-item:hover{background:var(--sunk)}
+.q-item[aria-current="true"]{background:var(--accent-soft);border-left-color:var(--accent)}
+.q-item .l1{display:flex;gap:8px;align-items:center}
+.q-item b{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-item .l2{color:var(--ink-2);font-size:12px;margin-top:2px;display:flex;gap:8px}
+.q-item .l2 span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.q-item .l2 span:last-child{white-space:nowrap}
+.q-item .l2 span:last-child{margin-left:auto;color:var(--ink-3)}
+.q-empty{padding:32px 24px;color:var(--ink-2)}
+.q-empty b{display:block;font:600 15px var(--f-head);color:var(--ink);margin-bottom:4px}
+.q-draft{display:flex;flex-direction:column;min-width:0}
+.q-draft .dh{padding:16px 24px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.q-draft .dh h2{font-size:17px}
+.q-draft .dh p{margin:2px 0 0;color:var(--ink-2)}
+.q-draft .back{display:none}
+.mail{padding:20px 24px;flex:1}
+.mail .subj{font-weight:600;font-size:15px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.mail .body{max-width:62ch;font-size:14.5px;line-height:1.7;white-space:pre-wrap}
+.cite{display:inline;border:0;background:none;padding:0;border-bottom:1.5px dotted var(--accent);cursor:pointer;color:inherit;font:inherit;text-align:inherit}
+.cite:hover,.cite.on{background:var(--accent-soft)}
+.cite sup{color:var(--accent);font-weight:600;font-size:10px;margin-left:1px}
+.mail textarea{width:100%;max-width:62ch;min-height:300px;resize:vertical;padding:12px;border:1px solid var(--accent);border-radius:8px;background:var(--bg);line-height:1.7;font-size:14.5px}
+.q-actions{display:flex;gap:8px;padding:12px 24px;border-top:1px solid var(--line);background:var(--bg);flex-wrap:wrap;align-items:center}
+.q-actions .note{flex:1;min-width:200px;color:var(--ink-3);font-size:12px}
+.reasons{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:12px 24px;border-top:1px solid var(--line);background:var(--err-soft)}
+.reasons span{font-weight:500;color:var(--err);margin-right:4px}
+.reasons button{height:28px;padding:0 10px;border-radius:14px;border:1px solid var(--err);background:var(--surface);color:var(--err);font-weight:500}
+.reasons button:hover{background:var(--err);color:var(--bg)}
+.decided{margin:0 24px;margin-top:16px;padding:12px 16px;border-radius:8px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.decided.ok{background:var(--ok-soft);color:var(--ok)} .decided.no{background:var(--err-soft);color:var(--err)}
+.decided span{flex:1;min-width:200px}
+.q-ctx{border-left:1px solid var(--line);background:var(--bg);padding:16px;overflow:auto;min-width:0}
+.q-ctx h3{font-size:13px;margin:0 0 8px}
+.q-ctx section+section{margin-top:20px}
+.scorebig{display:flex;align-items:baseline;gap:8px}
+.scorebig b{font:700 34px var(--f-head);letter-spacing:-.03em}
+.signals{list-style:none;margin:8px 0 0;padding:0}
+.signals li{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.signals li span{flex:1}
+.signals em{font-style:normal;font-weight:600;font-variant-numeric:tabular-nums}
+.signals em.p{color:var(--ok)} .signals em.n{color:var(--warn)}
+.srcbox{padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-bottom:8px;font-size:13px}
+.srcbox.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.srcbox .n{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:11px;margin-right:6px}
+.srcbox a{color:var(--accent);font-weight:500;text-decoration:none;overflow-wrap:anywhere}
+.srcbox a:hover{text-decoration:underline}
+.srcbox q{display:block;margin-top:6px;color:var(--ink-2);quotes:none;border-left:2px solid var(--line-strong);padding-left:8px}
+.flag{display:flex;gap:8px;padding:8px 10px;border-radius:8px;background:var(--warn-soft);color:var(--warn);font-size:13px;margin-top:8px}
+.flag .ic{margin-top:2px}
+
+/* ---------- toast + palette ---------- */
+.toasts{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:50;align-items:center}
+.toast{display:flex;gap:12px;align-items:center;padding:10px 12px 10px 16px;border-radius:10px;background:var(--ink);color:var(--bg);box-shadow:var(--shadow);animation:rise .18s ease-out}
+.toast button{background:none;border:0;color:var(--accent-line);font-weight:600;padding:0 4px}
+:root[data-theme="dark"] .toast button{color:var(--accent)}
+@keyframes rise{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+dialog.pal{width:min(560px,calc(100vw - 32px));margin-top:12vh;padding:0;border:1px solid var(--line-strong);border-radius:12px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);overflow:hidden}
+dialog.pal::backdrop{background:rgba(20,16,12,.45)}
+.pal input{width:100%;height:48px;padding:0 16px;border:0;border-bottom:1px solid var(--line);background:none;font-size:15px;outline:0}
+.pal ul{list-style:none;margin:0;padding:6px;max-height:320px;overflow:auto}
+.pal li button{display:flex;gap:10px;align-items:center;width:100%;height:36px;padding:0 10px;border:0;border-radius:6px;background:none;text-align:left}
+.pal li button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent)}
+.pal li button span{margin-left:auto;color:var(--ink-3);font-size:12px}
+.pal .none{padding:16px;color:var(--ink-2)}
+
+.tabbar{display:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1180px){
+  .queue{grid-template-columns:260px minmax(0,1fr)}
+  .q-ctx{display:none}
+  .q-ctx.open{display:block;grid-column:1/-1;border-left:0;border-top:1px solid var(--line)}
+  .runbody{grid-template-columns:1fr}
+  .panel{position:static}
+}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  .top{padding:0 16px}
+  .page{padding:16px 16px 88px}
+  .budget{margin-inline:-16px;padding-inline:16px}
+  .inbox-main{grid-template-columns:1fr;padding:16px}
+  .peek{border-left:0;padding-left:0}
+  .inbox-main h2{font-size:26px}
+  .alerts li{padding-inline:16px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .metric{border:0;margin:0;padding:16px 8px 16px 0;border-bottom:1px solid var(--line)}
+  .kbtn kbd{display:none}
+  .queue{grid-template-columns:1fr;min-height:0}
+  .queue .q-draft,.queue .q-ctx{display:none}
+  .queue.show-detail .q-list{display:none}
+  .queue.show-detail .q-draft{display:flex}
+  .queue.show-detail .q-ctx{display:block;border-left:0;border-top:1px solid var(--line)}
+  .q-list{border-right:0}
+  .q-draft .back{display:inline-flex}
+  .q-draft .dh,.mail,.q-actions,.reasons{padding-inline:16px}
+  .decided{margin-inline:16px}
+  .q-actions .note{display:none}
+  .step{grid-template-columns:36px 24px minmax(0,1fr) 52px}
+  .tabbar{display:grid;grid-template-columns:repeat(3,1fr);position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .tabbar a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;font-size:12px;font-weight:500;color:var(--ink-2);text-decoration:none;position:relative}
+  .tabbar a[aria-current="page"]{color:var(--accent)}
+  .tabbar .badge{position:absolute;top:4px;left:calc(50% + 6px);min-width:18px;height:16px;padding:0 5px;border-radius:8px;background:var(--pend);color:var(--bg);font-size:11px;font-weight:600;display:grid;place-items:center}
+  .toasts{bottom:72px}
+}
+@media (prefers-reduced-motion:reduce){
+  .pulse::after{animation:none}
+  .toast{animation:none}
+  *{scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side" aria-label="Ana menü">
+    <a class="brand" href="#/genel"><i><svg class="ic" viewBox="0 0 24 24" style="stroke-width:2.6"><path d="M6 15l6-6 6 6"/></svg></i>GradeUp<small>Agent</small></a>
+    <nav class="nav" id="nav"></nav>
+    <div class="grow"></div>
+    <div class="me"><span class="avatar" aria-hidden="true">EY</span><div><b>Ece Yıldız</b><span>ece@gradeup.solutions</span></div></div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <div class="crumb" id="crumb"></div>
+      <div class="sp"></div>
+      <button class="kbtn" id="openPal" aria-label="Komut paletini aç"><svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="muted">Ara veya git</span><kbd>⌘K</kbd></button>
+      <button class="iconbtn" id="theme" aria-label="Temayı değiştir"></button>
+    </header>
+    <main class="page" id="view" tabindex="-1"></main>
+  </div>
+</div>
+<nav class="tabbar" id="tabbar" aria-label="Alt menü"></nav>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+<dialog class="pal" id="pal" aria-label="Komut paleti">
+  <input id="palIn" placeholder="Ekran veya işlem ara" autocomplete="off" aria-label="Ara">
+  <ul id="palList" role="listbox"></ul>
+</dialog>
+
+<script>
+/* ===== mesajlar: arayüz metinleri tek yerde (çok dilliliğe hazırlık) ===== */
+const T = {
+  nav:{genel:'Genel bakış',agentlar:'Agent\'lar',olusturucu:'Agent Oluşturucu',calisma:'Çalıştırmalar',leadler:'Lead\'ler',onay:'Onay kuyruğu',maliyet:'Maliyet'},
+  statuses:{running:'Sürüyor',done:'Bitti',budget:'Bütçeye ulaştı',error:'Hata',pending:'Onay bekliyor'},
+  reasons:['Puan gerekçesi zayıf','Ton uygun değil','Yanlış kişi','Kaynak yetersiz']
+};
+
+/* ===== örnek veri ===== */
+const money = n => '$' + n.toFixed(2).replace('.', ',');
+const ICON = {
+  home:'<path d="M4 11l8-7 8 7M6 10v10h12V10"/>',
+  bot:'<rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M9 13v1M15 13v1"/>',
+  wand:'<path d="M5 19L17 7M14 4l1 2 2 1-2 1-1 2-1-2-2-1 2-1zM19 12l.6 1.4L21 14l-1.4.6L19 16l-.6-1.4L17 14l1.4-.6z"/>',
+  play:'<circle cx="12" cy="12" r="8"/><path d="M10.5 9l4 3-4 3z"/>',
+  users:'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 5a3.5 3.5 0 010 6.5M21 20c0-2.6-1.6-4.8-4-5.6"/>',
+  check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  coins:'<ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>',
+  globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.5 3.5 5.3 3.5 8.5s-1 6-3.5 8.5c-2.5-2.500-3.500-5.300-3.500-8.500s1-6 3.500-8.500z"/>',
+  save:'<path d="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>',
+  mail:'<rect x="3.500" y="5.500" width="17" height="13" rx="2"/><path d="M4 7.500l8 6 8-6"/>',
+  alert:'<path d="M12 4l9 16H3zM12 10v4.500M12 17.200v.1"/>',
+  x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13 7l4 4"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.600 5.600L7 7M17 17l1.400 1.400M5.600 18.400L7 17M17 7l1.400-1.400"/>',
+  moon:'<path d="M20 14.500A8 8 0 019.500 4 8 8 0 1020 14.500z"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>',
+  clock:'<circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/>',
+  stop:'<circle cx="12" cy="12" r="8.500"/><path d="M8.500 12h7"/>',
+  ext:'<path d="M14 4h6v6M20 4l-9 9M18 14v5H5V6h5"/>'
+};
+const ic = (n, cls='') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICON[n]}</svg>`;
+
+const RUNS = [
+  {id:218, agent:'Lead Araştırmacı', ver:'v3', status:'running', leads:9, drafts:3, cost:0, budget:4.00, dur:'04:31', start:'09:12', live:true},
+  {id:217, agent:'Lead Araştırmacı', ver:'v3', status:'done', leads:20, drafts:6, cost:3.12, budget:4.00, dur:'11:48', start:'08:30'},
+  {id:216, agent:'Taslak Yazarı', ver:'v2', status:'pending', leads:0, drafts:6, cost:0.94, budget:1.50, dur:'02:07', start:'08:05'},
+  {id:215, agent:'Lead Araştırmacı', ver:'v3', status:'budget', leads:17, drafts:4, cost:4.00, budget:4.00, dur:'13:02', start:'07:40'},
+  {id:214, agent:'Yanıt Sınıflandırıcı', ver:'v1', status:'done', leads:0, drafts:0, cost:0.18, budget:0.50, dur:'00:41', start:'07:15'},
+  {id:213, agent:'Lead Araştırmacı', ver:'v2', status:'error', leads:2, drafts:0, cost:0.37, budget:4.00, dur:'01:20', start:'07:02'}
+];
+const DAILY = [8.1,11.4,9.8,12.6,0,0,14.2,13.1,10.9,15.4,12.2,0,0,6.9]; // son 14 gün
+
+const STEPS = [
+  {t:'00:00', kind:'start', title:'Çalıştırma başladı', note:'Girdi: İstanbul, lojistik, 50–250 çalışan, 20 şirket', cost:0, cat:'model',
+    detail:[['Agent','Lead Araştırmacı v3'],['Hedef','İstanbul\'daki 50–250 kişilik lojistik firmaları'],['Şirket sayısı','20'],['Bütçe','$4,00']]},
+  {t:'00:04', kind:'search', tool:'web_search', title:'İstanbul lojistik firmaları 50–250 çalışan', note:'10 sonuç döndü, 6\'sı aday', cost:0.11, cat:'search',
+    detail:[['Arama','İstanbul lojistik firmaları 50–250 çalışan'],['Sonuç','10 sayfa'],['Aday olarak seçilen','6 şirket']],
+    sources:[['kuzeyantrepo.example','Kuzey Antrepo Lojistik'],['bogazicitasimacilik.example','Boğaziçi Taşımacılık'],['pendikdepo.example','Pendik Depo ve Dağıtım']]},
+  {t:'00:19', kind:'fetch', tool:'web_fetch', title:'kuzeyantrepo.example/hakkimizda', note:'Okundu: 118 çalışan, merkez Tuzla', cost:0.14, cat:'page',
+    detail:[['Sayfa','kuzeyantrepo.example/hakkimizda'],['Bulunan','118 çalışan, merkez Tuzla, 2009\'dan beri'],['Karar','Şirket büyüklüğü aralıkta']],
+    sources:[['kuzeyantrepo.example/hakkimizda','Hakkımızda']]},
+  {t:'00:41', kind:'fetch', tool:'web_fetch', title:'kuzeyantrepo.example/kariyer', note:'3 açık operasyon asistanı ilanı', cost:0.12, cat:'page',
+    detail:[['Sayfa','kuzeyantrepo.example/kariyer'],['Bulunan','3 açık "Operasyon Asistanı" ilanı'],['Anlamı','Tekrarlayan operasyon iş yükü işareti']],
+    sources:[['kuzeyantrepo.example/kariyer','Kariyer']]},
+  {t:'00:58', kind:'save', tool:'save_lead', title:'Kuzey Antrepo Lojistik kaydedildi', note:'Puan 82', cost:0.04, cat:'model',
+    detail:[['Şirket','Kuzey Antrepo Lojistik'],['Kişi','Selin Karaca, Operasyon Direktörü'],['Puan','82 / 100'],['Gerekçe','Kariyer sayfasında 3 operasyon asistanı ilanı, sevkiyat sorgusu form ile alınıyor, müşteri portalı yok']],
+    sources:[['kuzeyantrepo.example/kariyer','Kariyer'],['kuzeyantrepo.example/iletisim','Sevkiyat sorgu formu']]},
+  {t:'01:20', kind:'fetch', tool:'web_fetch', title:'bogazicitasimacilik.example', note:'Sevkiyat sorgusu telefon ve e-posta ile', cost:0.13, cat:'page',
+    detail:[['Sayfa','bogazicitasimacilik.example'],['Bulunan','Sevkiyat sorgusu için yalnızca telefon ve e-posta var'],['Çalışan','Yaklaşık 90']],
+    sources:[['bogazicitasimacilik.example','Ana sayfa']]},
+  {t:'01:44', kind:'save', tool:'save_lead', title:'Boğaziçi Taşımacılık kaydedildi', note:'Puan 74', cost:0.04, cat:'model',
+    detail:[['Şirket','Boğaziçi Taşımacılık'],['Kişi','Murat Aydoğan, Genel Müdür Yardımcısı'],['Puan','74 / 100'],['Gerekçe','Sevkiyat sorgusu elle yanıtlanıyor, portal yok']],
+    sources:[['bogazicitasimacilik.example','Ana sayfa']]},
+  {t:'02:10', kind:'search', tool:'web_search', title:'Tuzla depo e-ticaret fulfillment', note:'8 sonuç döndü, 3\'ü aday', cost:0.11, cat:'search',
+    detail:[['Arama','Tuzla depo e-ticaret fulfillment'],['Sonuç','8 sayfa'],['Aday olarak seçilen','3 şirket']]},
+  {t:'02:31', kind:'error', tool:'web_fetch', title:'tuzlakonteyner.example', note:'Sayfa erişimi reddedildi (403), atlandı', cost:0.01, cat:'page',
+    detail:[['Sayfa','tuzlakonteyner.example'],['Hata','403 erişim reddedildi'],['Ne yapıldı','Şirket atlandı, listeye "doğrulanamadı" notuyla eklendi']]},
+  {t:'02:50', kind:'fetch', tool:'web_fetch', title:'pendikdepo.example', note:'Okundu: 64 çalışan', cost:0.12, cat:'page',
+    detail:[['Sayfa','pendikdepo.example'],['Bulunan','64 çalışan, depo ve dağıtım'],['Not','İletişimde yalnızca genel bilgi adresi var']],
+    sources:[['pendikdepo.example','Ana sayfa']]},
+  {t:'03:12', kind:'save', tool:'save_lead', title:'Pendik Depo ve Dağıtım kaydedildi', note:'Puan 61, karar verici belirsiz', cost:0.04, cat:'model',
+    detail:[['Şirket','Pendik Depo ve Dağıtım'],['Kişi','Derya Işık, Bilgi İşlem Sorumlusu'],['Puan','61 / 100'],['Gerekçe','Ölçü uygun, otomasyon işareti zayıf, kişi karar verici olmayabilir']],
+    sources:[['pendikdepo.example','Ana sayfa']]},
+  {t:'03:40', kind:'draft', tool:'draft_outreach', title:'Kuzey Antrepo için taslak hazırlandı', note:'Taslak 2 kaynağa bağlı', cost:0.09, cat:'model',
+    detail:[['Alıcı','Selin Karaca'],['Kaynağa bağlı cümle','2'],['Gönderim','Yapılmaz. Taslak yalnızca onay kuyruğuna gider.']]},
+  {t:'03:44', kind:'approval', tool:'request_approval', title:'Onay kuyruğuna eklendi', note:'İnsan onayı bekliyor', cost:0, cat:'model',
+    detail:[['Taslak','Kuzey Antrepo Lojistik'],['Durum','Onay bekliyor']]},
+  {t:'04:31', kind:'live', tool:'web_fetch', title:'beylikduzusogukzincir.example okunuyor', note:'Şirket 10 / 20', cost:0.06, cat:'page',
+    detail:[['Şu an','Sayfa okunuyor'],['Sıradaki','Gebze Transit, Ataşehir Kargo Ağı']]}
+];
+const KIND_ICON = {start:'play',search:'search',fetch:'globe',save:'save',draft:'mail',approval:'clock',error:'alert',live:'globe'};
+const KIND_FILTER = {search:'arama',fetch:'sayfa',live:'sayfa',error:'sayfa',save:'kayit',draft:'kayit',approval:'kayit',start:'hepsi'};
+const BASE_COST = 1.19; // model akıl yürütmesi (adımlara dağılmamış kısım)
+const CATS = [['model','Model','--cat-model'],['search','Web arama','--cat-search'],['page','Sayfa okuma','--cat-page']];
+
+const DRAFTS = [
+ {id:1,company:'Kuzey Antrepo Lojistik',person:'Selin Karaca',role:'Operasyon Direktörü',score:82,wait:'3 sa 12 dk',status:'pending',
+  subject:'Operasyon ekibinizin sevkiyat sorgu yükü',
+  body:[['Merhaba Selin Hanım,\n\nKuzey Antrepo\'nun kariyer sayfasında ',0],['üç operasyon asistanı ilanı',1],[' gördüm. Sevkiyat sorgularının sitenizde ',0],['form üzerinden alındığını',2],[' da fark ettim; bu iki işin birlikte büyüyen bir ekip yükü yarattığını tahmin ediyorum.\n\nGradeUp olarak tekrar eden operasyon işlerini yapan yapay zekâ ajanları kuruyoruz. 20 dakikalık bir görüşmede, sevkiyat sorgu akışınıza nasıl uyabileceğini göstermek isterim.\n\nUygun bir zamanınız var mı?\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  signals:[['Kariyer sayfasında 3 operasyon asistanı ilanı',20,1],['Sevkiyat sorgusu form ile alınıyor',25,2],['Müşteri portalı yok',15,2],['118 çalışan, aralıkta',10,0],['Karar verici ile eşleşen unvan',12,0]],
+  sources:[{n:1,u:'kuzeyantrepo.example/kariyer',q:'Operasyon Asistanı (3 pozisyon), Tuzla. Sevkiyat takibi ve müşteri yazışmaları.'},{n:2,u:'kuzeyantrepo.example/iletisim',q:'Sevkiyat sorgunuzu aşağıdaki form ile iletin, ekibimiz iş günü içinde dönüş yapar.'}]},
+ {id:2,company:'Boğaziçi Taşımacılık',person:'Murat Aydoğan',role:'Genel Müdür Yardımcısı',score:74,wait:'2 sa 40 dk',status:'pending',
+  subject:'Sevkiyat sorgularını elle yanıtlamak',
+  body:[['Merhaba Murat Bey,\n\nBoğaziçi Taşımacılık sitesinde ',0],['sevkiyat sorgusu için telefon ve e-posta',1],[' dışında bir kanal göremedim. Bu tür sorguların çoğu aynı birkaç soruya dönüyor ve otomatikleştirilebiliyor.\n\nGradeUp\'ta bunu yapan ajanlar kuruyoruz. İsterseniz kısa bir görüşmede örnek gösterebilirim.\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  signals:[['Sevkiyat sorgusu telefon ve e-posta ile',25,1],['Müşteri portalı yok',15,1],['Yaklaşık 90 çalışan, aralıkta',10,0],['Kariyer sayfasında ilan yok',-6,0]],
+  sources:[{n:1,u:'bogazicitasimacilik.example',q:'Sevkiyat sorgusu için bizi arayın veya e-posta gönderin.'}]},
+ {id:3,company:'Beylikdüzü Soğuk Zincir',person:'Can Özer',role:'Kurucu',score:79,wait:'1 sa 55 dk',status:'pending',
+  subject:'Sıcaklık raporlarını elle hazırlamak',
+  body:[['Merhaba Can Bey,\n\nBeylikdüzü Soğuk Zincir\'in ',0],['müşterilere sıcaklık raporunu e-posta ile gönderdiğini',1],[' okudum. Rapor hazırlama gibi düzenli işler ekibinizin zamanını alıyor olabilir.\n\nGradeUp olarak bu tür işleri yapan ajanlar kuruyoruz. Kısa bir görüşme için uygun musunuz?\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  signals:[['Sıcaklık raporları e-posta ile elle gönderiliyor',22,1],['Kurucu karar verici',12,0],['Yaklaşık 70 çalışan, aralıkta',10,0]],
+  sources:[{n:1,u:'beylikduzusogukzincir.example/hizmetler',q:'Sıcaklık kayıt raporları talep üzerine e-posta ile iletilir.'}]},
+ {id:4,company:'Ataşehir Kargo Ağı',person:'Okan Demir',role:'Operasyon Müdürü',score:71,wait:'1 sa 20 dk',status:'pending',
+  subject:'Şube bazlı teslimat sorguları',
+  body:[['Merhaba Okan Bey,\n\nAtaşehir Kargo Ağı\'nın ',0],['11 şubeyle çalıştığını',1],[' gördüm. Şube başına gelen teslimat sorgularını tek yerden yanıtlamak mümkün olabilir.\n\nGradeUp\'ın çözümünü kısa bir görüşmede anlatmak isterim.\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  signals:[['11 şube, dağınık sorgu akışı',18,1],['Unvan operasyonla ilgili',10,0],['Müşteri portalı var',-8,0]],
+  sources:[{n:1,u:'atasehirkargo.example/subeler',q:'11 şubemizle İstanbul\'un her ilçesindeyiz.'}]},
+ {id:5,company:'Gebze Transit Lojistik',person:'Aylin Tekin',role:'Satın Alma Müdürü',score:68,wait:'48 dk',status:'pending',
+  subject:'Tedarikçi teklif sürecinde zaman',
+  body:[['Merhaba Aylin Hanım,\n\nGebze Transit\'in ',0],['teklif taleplerini e-posta ile aldığını',1],[' gördüm. Teklif karşılaştırma gibi işlerde ajanlarımız zaman kazandırabilir.\n\nKısa bir görüşme yapabilir miyiz?\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  signals:[['Teklif talepleri e-posta ile',16,1],['Satın alma unvanı, doğrudan karar verici değil',-4,0],['Yaklaşık 140 çalışan, aralıkta',10,0]],
+  sources:[{n:1,u:'gebzetransit.example/teklif',q:'Teklif talepleriniz için satinalma@ adresine yazın.'}]},
+ {id:6,company:'Pendik Depo ve Dağıtım',person:'Derya Işık',role:'Bilgi İşlem Sorumlusu',score:61,wait:'22 dk',status:'pending',
+  subject:'Depo operasyonunda tekrarlayan işler',
+  body:[['Merhaba Derya Hanım,\n\nPendik Depo ve Dağıtım\'ın ',0],['64 kişilik ekibiyle depo ve dağıtım yaptığını',1],[' okudum. Tekrarlayan operasyon işlerinde ajanlarımız yardımcı olabilir.\n\nUygun olursanız kısa bir görüşme yapalım.\n\nSaygılarımla,\nEce Yıldız\nGradeUp',0]],
+  flag:'Kişinin karar verici olup olmadığı belirsiz. Göndermeden önce doğru kişiyi kontrol et.',
+  signals:[['Ölçü uygun, 64 çalışan',10,0],['Otomasyon işareti zayıf',5,1],['Unvan karar verici olmayabilir',-8,0]],
+  sources:[{n:1,u:'pendikdepo.example',q:'64 kişilik ekibimizle depo ve dağıtım hizmeti sunuyoruz.'}]}
+];
+
+/* ===== durum ===== */
+const S = {route:'genel', runId:218, step:STEPS.length-1, filter:'hepsi', qTab:'pending', sel:1, edit:false, rejecting:false, mobileDetail:false, ctxOpen:false, hot:null};
+const pendingCount = () => DRAFTS.filter(d => d.status==='pending').length;
+const $ = (s, r=document) => r.querySelector(s);
+const view = $('#view');
+
+/* ===== yardımcılar ===== */
+function statusChip(s){
+  const m = {running:'<span class="pulse"></span>', done:ic('check'), budget:ic('stop'), error:ic('alert'), pending:ic('clock')}[s];
+  return `<span class="st ${s}">${m}${T.statuses[s]}</span>`;
+}
+function toast(msg, undo){
+  const el = document.createElement('div'); el.className='toast';
+  el.innerHTML = `<span>${msg}</span>` + (undo ? '<button type="button">Geri al</button>' : '');
+  if(undo) el.querySelector('button').onclick = () => { undo(); el.remove(); };
+  $('#toasts').append(el); setTimeout(() => el.remove(), 5000);
+}
+function scoreCls(n){ return n>=75?'hi':n<65?'lo':''; }
+function cum(i){ return STEPS.slice(0,i+1).reduce((a,s)=>a+s.cost,0) + BASE_COST*((i+1)/STEPS.length); }
+
+/* ===== kabuk ===== */
+function renderShell(){
+  const items = [['genel','home','#/genel'],['agentlar','bot'],['olusturucu','wand'],['calisma','play','#/calisma/218'],['leadler','users'],['onay','check','#/onay'],['maliyet','coins']];
+  $('#nav').innerHTML = items.map(([k,i,h]) => {
+    const on = S.route===k, n = k==='onay'?pendingCount():0;
+    return h ? `<a href="${h}" ${on?'aria-current="page"':''}>${ic(i)}${T.nav[k]}${n?`<span class="badge">${n}</span>`:''}</a>`
+             : `<a href="#" aria-disabled="true" title="Bu prototipte yok" tabindex="-1">${ic(i)}${T.nav[k]}</a>`;
+  }).join('');
+  const tabs = [['genel','home','#/genel'],['calisma','play','#/calisma/218'],['onay','check','#/onay']];
+  $('#tabbar').innerHTML = tabs.map(([k,i,h]) => {
+    const n = k==='onay'?pendingCount():0;
+    return `<a href="${h}" ${S.route===k?'aria-current="page"':''}>${ic(i)}${T.nav[k]}${n?`<span class="badge">${n}</span>`:''}</a>`;
+  }).join('');
+  const crumbs = {genel:'<b>Genel bakış</b>', calisma:'<span>Çalıştırmalar</span><span class="faint">/</span><b>#218</b>', onay:'<b>Onay kuyruğu</b>'};
+  $('#crumb').innerHTML = crumbs[S.route];
+  const dark = isDark();
+  $('#theme').innerHTML = ic(dark?'sun':'moon');
+  $('#theme').setAttribute('aria-label', dark?'Açık temaya geç':'Koyu temaya geç');
+}
+function isDark(){
+  const t = document.documentElement.dataset.theme;
+  return t ? t==='dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+}
+$('#theme').onclick = () => {
+  const next = isDark()?'light':'dark';
+  document.documentElement.dataset.theme = next;
+  try{ localStorage.setItem('gu-theme', next); }catch(e){}
+  renderShell();
+};
+try{ const t = localStorage.getItem('gu-theme'); if(t) document.documentElement.dataset.theme = t; }catch(e){}
+
+/* ===== genel bakış ===== */
+function viewGenel(){
+  const pend = DRAFTS.filter(d=>d.status==='pending');
+  const oldest = pend[0];
+  const total = DAILY.reduce((a,b)=>a+b,0);
+  const max = Math.max(...DAILY);
+  const spark = `<svg class="spark" viewBox="0 0 140 28" width="140" height="28" role="img" aria-label="Son 14 günün günlük maliyeti">${DAILY.map((v,i)=>`<rect x="${i*10}" y="${28-(v/max)*26-1}" width="7" height="${Math.max((v/max)*26,1)}" rx="1.500" fill="${i===13?'var(--accent)':'var(--line-strong)'}"/>`).join('')}</svg>`;
+  view.innerHTML = `
+  <div class="pagehead"><div><h1>Bugün, 15 Ekim</h1><p>6 çalıştırma başladı, 1 tanesi şu an sürüyor.</p></div></div>
+  <section class="inbox" aria-labelledby="bekleyen">
+    <div class="inbox-main">
+      <div>
+        ${pend.length ? `
+        <h2 id="bekleyen" class="num">${pend.length} taslak onayını bekliyor</h2>
+        <p>En eskisi ${oldest.wait}dir kuyrukta. Hiçbiri otomatik gönderilmez; onayladıkların kopyalanıp elle gönderilir.</p>
+        <a class="btn primary" href="#/onay">İncelemeye başla <kbd>J</kbd></a>` : `
+        <h2 id="bekleyen">Onay bekleyen taslak yok</h2>
+        <p>Yeni taslaklar hazır olunca burada görünür.</p>
+        <a class="btn" href="#/onay">Kuyruğu aç</a>`}
+      </div>
+      <ul class="peek" aria-label="Sıradaki taslaklar">
+        ${pend.slice(0,3).map(d=>`<li><a href="#/onay/${d.id}"><b>${d.company}</b><span class="score ${scoreCls(d.score)}">${d.score}</span></a></li>`).join('')}
+      </ul>
+    </div>
+    <ul class="alerts">
+      <li><span>${ic('alert')}</span><span><b>Çalıştırma #215</b> bütçeye ulaşıp durdu: 17 / 20 şirket tamamlandı.</span><a href="#/calisma/218">İncele</a></li>
+      <li class="err"><span>${ic('x')}</span><span><b>Çalıştırma #213</b> hata verdi: Anthropic API 529, yeniden denemeler bitti.</span><a href="#/calisma/218">İncele</a></li>
+    </ul>
+  </section>
+
+  <dl class="metrics">
+    <div class="metric"><dt>Bu ayın maliyeti</dt><dd><span class="big num">${money(184.20)}</span><div class="bar" role="img" aria-label="Aylık limitin yüzde 46'sı kullanıldı"><i style="width:46%;background:var(--accent)"></i></div><small>$400,00 aylık limitin %46'sı</small></dd></div>
+    <div class="metric"><dt>Lead başına maliyet</dt><dd><span class="big num">${money(0.41)}</span><small><span class="delta-ok">%12 düştü</span>, geçen haftaya göre</small></dd></div>
+    <div class="metric"><dt>Onaylanan taslak başına</dt><dd><span class="big num">${money(2.86)}</span><small>Son 30 günde 64 onay</small></dd></div>
+    <div class="metric"><dt>Son 14 gün</dt><dd><span class="big num">${money(total)}</span>${spark}</dd></div>
+  </dl>
+
+  <div class="secthead"><h2>Bugünkü çalıştırmalar</h2></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Agent</th><th>Durum</th><th class="r">Lead</th><th class="r">Taslak</th><th class="r">Maliyet / bütçe</th><th class="r">Süre</th><th class="r">Başladı</th></tr></thead>
+    <tbody>${RUNS.map(r=>{
+      const cost = r.id===218 ? cum(STEPS.length-1) : r.cost, pct = Math.min(100, cost/r.budget*100);
+      const link = r.id===218;
+      return `<tr class="${link?'link':''}" ${link?'tabindex="0" data-go="#/calisma/218"':'title="Bu prototipte yalnızca #218 ayrıntılı"'}>
+        <td><div class="who"><b>${r.agent}</b><span>${r.ver}, #${r.id}</span></div></td>
+        <td>${statusChip(r.status)}</td>
+        <td class="r num">${r.id===218?STEPS.filter(s=>s.kind==='save').length+6:r.leads}</td><td class="r num">${r.drafts}</td>
+        <td class="r"><div class="mini"><span class="num">${money(cost)} / ${money(r.budget)}</span><div class="bar ${pct>=100?'hot':''}"><i style="width:${pct}%"></i></div></div></td>
+        <td class="r num">${r.dur}</td><td class="r num">${r.start}</td></tr>`;}).join('')}
+    </tbody></table></div>`;
+}
+
+/* ===== çalıştırma detayı ===== */
+function viewCalisma(){
+  const last = STEPS.length-1;
+  const cur = cum(last), bud = 4.00;
+  const tot = {model:BASE_COST, search:0, page:0};
+  STEPS.forEach(s => tot[s.cat]+=s.cost);
+  const sum = tot.model+tot.search+tot.page;
+  const seg = CATS.map(([k,l,v]) => `<i style="width:${tot[k]/bud*100}%;background:var(${v})" title="${l}: ${money(tot[k])}"></i>`).join('');
+  const filt = S.filter;
+  const steps = STEPS.map((s,i)=>({...s,i})).filter(s => filt==='hepsi' || KIND_FILTER[s.kind]===filt);
+  const sel = STEPS[S.step] || STEPS[last];
+  const FL = [['hepsi','Tümü'],['arama','Aramalar'],['sayfa','Sayfalar'],['kayit','Kayıtlar']];
+  view.innerHTML = `
+  <div class="runhead"><h1>Lead Araştırmacı v3</h1>${statusChip('running')}<span class="sp" style="flex:1"></span><button class="btn danger" type="button" data-act="stop">${ic('stop')}Durdur</button></div>
+  <p class="runmeta"><span>Çalıştırma #218</span><span>09:12'de başladı</span><span>İstanbul, lojistik, 50–250 çalışan</span></p>
+
+  <div class="budget" role="group" aria-label="Bütçe">
+    <div class="budget-row"><span class="amt num">${money(sum)}</span><span class="of num">/ ${money(bud)} bütçe</span><span class="right num">${money(bud-sum)} kaldı, bütçe dolunca oturum durur</span></div>
+    <div class="bar" role="img" aria-label="Bütçenin yüzde ${Math.round(sum/bud*100)}'i kullanıldı">${seg}</div>
+    <div class="legend">${CATS.map(([k,l,v])=>`<span><i style="background:var(${v})"></i>${l} <b class="num">${money(tot[k])}</b></span>`).join('')}</div>
+  </div>
+
+  <div class="counts">
+    <div><b class="num">10 / 20</b><span>Şirket</span></div>
+    <div><b class="num">9</b><span>Lead kaydedildi</span></div>
+    <div><b class="num">2</b><span>Arama</span></div>
+    <div><b class="num">23</b><span>Sayfa okundu</span></div>
+    <div><b class="num">412 B / 38 B</b><span>Girdi / çıktı token</span></div>
+    <div><b class="num">${money(sum/9)}</b><span>Lead başına</span></div>
+  </div>
+
+  <div class="runbody">
+    <div>
+      <div class="filters" role="group" aria-label="Adım filtresi">${FL.map(([k,l])=>`<button class="chip" type="button" data-filter="${k}" aria-pressed="${filt===k}">${l}</button>`).join('')}</div>
+      <ol class="tl" aria-label="Çalıştırma zaman çizelgesi">
+      ${steps.map(s=>`<li class="${s.kind==='live'?'live':''}"><button class="step" type="button" data-step="${s.i}" aria-pressed="${S.step===s.i}">
+        <span class="t num">${s.t}</span>
+        <span class="rail"><span class="node ${s.kind}">${s.kind==='live'?'<span class="pulse" style="width:6px;height:6px"></span>':ic(KIND_ICON[s.kind])}</span></span>
+        <span class="what"><b>${s.title}</b><span>${s.tool?`<span class="tool" style="display:inline">${s.tool}</span>`:''}${s.note}</span></span>
+        <span class="cost num ${s.cost?'':'zero'}">${s.cost?'+'+money(s.cost):'—'}</span>
+      </button></li>`).join('')}
+      </ol>
+    </div>
+    <aside class="panel" aria-label="Adım ayrıntısı" aria-live="polite">
+      <header><span class="tool">${sel.tool||'sistem'}</span><h3>${sel.title}</h3><div class="muted num" style="margin-top:4px">${sel.t}, ${sel.cost?'+'+money(sel.cost):'ücretsiz'}, toplam ${money(cum(STEPS.indexOf(sel)))}</div></header>
+      <dl>${sel.detail.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
+      ${sel.sources?`<div class="src"><h4>Kaynaklar</h4>${sel.sources.map(([u,l])=>`<a class="srclink" href="#" onclick="return false">${ic('ext')}${u}<span class="faint" style="font-weight:400">${l}</span></a>`).join('')}</div>`:''}
+    </aside>
+  </div>`;
+}
+
+/* ===== onay kuyruğu ===== */
+function draftPlain(d){ return d.body.map(b=>b[0]).join(''); }
+function viewOnay(){
+  const list = DRAFTS.filter(d=>d.status===S.qTab);
+  if(!list.find(d=>d.id===S.sel)) S.sel = list[0] ? list[0].id : null;
+  const d = DRAFTS.find(x=>x.id===S.sel);
+  const cnt = k => DRAFTS.filter(x=>x.status===k).length;
+  const TABS = [['pending','Bekleyen'],['approved','Onaylanan'],['rejected','Reddedilen']];
+  view.innerHTML = `
+  <div class="pagehead"><div><h1>Onay kuyruğu</h1><p>Taslakları incele. Hiçbir şey otomatik gönderilmez.</p></div><div class="sp"></div>
+    <span class="faint" aria-hidden="true"><kbd>J</kbd> <kbd>K</kbd> gezin <kbd>A</kbd> onayla <kbd>E</kbd> düzenle <kbd>R</kbd> reddet</span></div>
+  <div class="queue ${S.mobileDetail&&d?'show-detail':''}" id="queue">
+    <section class="q-list" aria-label="Taslaklar">
+      <div class="tabs" role="tablist">${TABS.map(([k,l])=>`<button role="tab" type="button" data-qtab="${k}" aria-selected="${S.qTab===k}">${l}<span class="num">${cnt(k)}</span></button>`).join('')}</div>
+      ${list.length ? `<ul class="q-items">${list.map(x=>`<li><button class="q-item" type="button" data-sel="${x.id}" ${x.id===S.sel?'aria-current="true"':''}>
+        <div class="l1"><b>${x.company}</b><span class="score ${scoreCls(x.score)}" title="Puan">${x.score}</span></div>
+        <div class="l2"><span>${x.person}, ${x.role}</span><span class="num">${x.wait}</span></div></button></li>`).join('')}</ul>`
+      : `<div class="q-empty"><b>${S.qTab==='pending'?'Kuyruk boş':'Burada henüz bir şey yok'}</b>${S.qTab==='pending'?'Yeni taslaklar hazır olunca burada görünür. Çalışan bir agent varsa sonuçları Çalıştırmalar ekranından izleyebilirsin.':'Karar verdiğin taslaklar burada listelenir.'}</div>`}
+    </section>
+    ${d ? draftPane(d) : '<section class="q-draft"></section><aside class="q-ctx"></aside>'}
+  </div>`;
+}
+function draftPane(d){
+  const body = S.edit
+    ? `<textarea id="editor" aria-label="Taslak metni">${draftPlain(d).replace(/</g,'&lt;')}</textarea>`
+    : `<div class="body">${d.body.map(([t,s])=> s ? `<span role="button" tabindex="0" class="cite ${S.hot===s?'on':''}" data-cite="${s}">${t.replace(/</g,'&lt;')}<sup>${s}</sup></span>` : t.replace(/</g,'&lt;')).join('')}</div>`;
+  const banner = d.status==='approved'
+    ? `<div class="decided ok">${ic('check')}<span>Onaylandı. Kopyalayıp kendin gönder; sistem bu taslağı göndermez.</span><button class="btn" type="button" data-act="copy">${ic('copy')}Kopyala</button></div>`
+    : d.status==='rejected' ? `<div class="decided no">${ic('x')}<span>Reddedildi: ${d.reason}</span><button class="btn" type="button" data-act="undo">Geri al</button></div>` : '';
+  const actions = d.status!=='pending' ? '' : S.edit
+    ? `<div class="q-actions"><button class="btn primary" type="button" data-act="saveedit">Değişiklikleri kaydet</button><button class="btn" type="button" data-act="canceledit">Vazgeç <kbd>Esc</kbd></button><span class="note">Düzenlenen metin kaynak bağlantılarını kaybeder.</span></div>`
+    : S.rejecting
+    ? `<div class="reasons" role="group" aria-label="Ret nedeni"><span>Neden reddediyorsun?</span>${T.reasons.map(r=>`<button type="button" data-reason="${r}">${r}</button>`).join('')}<button type="button" data-act="cancelreject" style="border-color:var(--line-strong);color:var(--ink-2)">Vazgeç</button></div>`
+    : `<div class="q-actions"><button class="btn ok" type="button" data-act="approve">${ic('check')}Onayla <kbd>A</kbd></button><button class="btn" type="button" data-act="edit">${ic('edit')}Düzenle <kbd>E</kbd></button><button class="btn danger" type="button" data-act="reject">${ic('x')}Reddet <kbd>R</kbd></button><span class="note">Onaylamak göndermek anlamına gelmez.</span></div>`;
+  return `
+  <section class="q-draft" aria-label="Taslak">
+    <div class="dh"><div style="flex:1;min-width:0"><button class="btn back" type="button" data-act="back" style="margin-bottom:12px">${ic('back')}Liste</button><h2>${d.company}</h2><p>${d.person}, ${d.role}</p></div><span class="score ${scoreCls(d.score)}" style="height:28px;font-size:14px;min-width:40px">${d.score}</span></div>
+    ${banner}
+    <div class="mail"><div class="subj">${d.subject}</div>${body}</div>
+    ${actions}
+  </section>
+  <aside class="q-ctx" aria-label="Lead bağlamı">
+    <section><h3>Puan gerekçesi</h3>
+      <div class="scorebig"><b class="num">${d.score}</b><span class="muted">/ 100</span></div>
+      <ul class="signals">${d.signals.map(([t,p])=>`<li><span>${t}</span><em class="${p>0?'p':'n'}">${p>0?'+':'−'}${Math.abs(p)}</em></li>`).join('')}</ul>
+      ${d.flag?`<div class="flag">${ic('alert')}<span>${d.flag}</span></div>`:''}
+    </section>
+    <section><h3>Kaynaklar</h3>
+      ${d.sources.map(s=>`<div class="srcbox ${S.hot===s.n?'on':''}" id="src${s.n}"><span class="n">${s.n}</span><a href="#" onclick="return false">${s.u}</a><q>${s.q}</q></div>`).join('')}
+      <p class="faint" style="font-size:12px;margin:8px 0 0">Metindeki altı noktalı cümleler bu kaynaklara bağlı.</p>
+    </section>
+  </aside>`;
+}
+function decide(status, reason){
+  const d = DRAFTS.find(x=>x.id===S.sel); if(!d || d.status!=='pending') return;
+  const list = DRAFTS.filter(x=>x.status==='pending'); const idx = list.indexOf(d);
+  d.status = status; if(reason) d.reason = reason;
+  S.edit = S.rejecting = false; S.hot = null;
+  const nxt = list[idx+1] || list[idx-1];
+  S.sel = nxt && nxt!==d ? nxt.id : d.id;
+  if(!DRAFTS.some(x=>x.status===S.qTab && x.id===S.sel)) S.qTab = 'pending';
+  S.mobileDetail = false;
+  render();
+  toast(status==='approved' ? 'Onaylandı' : 'Reddedildi', () => { d.status='pending'; delete d.reason; S.qTab='pending'; S.sel=d.id; render(); });
+}
+function move(dir){
+  const list = DRAFTS.filter(d=>d.status===S.qTab); const i = list.findIndex(d=>d.id===S.sel);
+  const n = list[Math.max(0, Math.min(list.length-1, i+dir))]; if(n){ S.sel=n.id; S.edit=S.rejecting=false; S.hot=null; render(); }
+}
+
+/* ===== yönlendirme ve olaylar ===== */
+function render(){
+  renderShell();
+  if(S.route==='genel') viewGenel(); else if(S.route==='calisma') viewCalisma(); else viewOnay();
+}
+function route(){
+  const [, r, p] = location.hash.split('/');
+  S.route = ['genel','calisma','onay'].includes(r) ? r : 'genel';
+  if(S.route==='onay' && p){ const d = DRAFTS.find(x=>x.id==p); if(d){ S.sel=d.id; S.qTab=d.status; S.mobileDetail=true; } }
+  if(S.route!=='onay') S.mobileDetail=false;
+  S.edit = S.rejecting = false;
+  render(); scrollTo(0,0);
+}
+addEventListener('hashchange', route);
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-go],[data-step],[data-filter],[data-qtab],[data-sel],[data-cite],[data-act],[data-reason]'); if(!t) return;
+  const D = t.dataset;
+  if(D.go){ location.hash = D.go; return; }
+  if(D.step){ S.step = +D.step; render(); return; }
+  if(D.filter){ S.filter = D.filter; render(); return; }
+  if(D.qtab){ S.qTab = D.qtab; S.sel = null; S.edit=S.rejecting=false; render(); return; }
+  if(D.sel){ S.sel = +D.sel; S.edit=S.rejecting=false; S.hot=null; S.mobileDetail=true; render(); return; }
+  if(D.cite){ S.hot = +D.cite; render(); $('#src'+S.hot)?.scrollIntoView({block:'nearest'}); return; }
+  if(D.reason){ decide('rejected', D.reason); return; }
+  const a = D.act, d = DRAFTS.find(x=>x.id===S.sel);
+  if(a==='approve') decide('approved');
+  else if(a==='reject'){ S.rejecting=true; render(); }
+  else if(a==='cancelreject'){ S.rejecting=false; render(); }
+  else if(a==='edit'){ S.edit=true; render(); $('#editor')?.focus(); }
+  else if(a==='canceledit'){ S.edit=false; render(); }
+  else if(a==='saveedit'){ d.body=[[$('#editor').value,0]]; d.signals=d.signals; S.edit=false; render(); toast('Değişiklikler kaydedildi'); }
+  else if(a==='copy'){ const txt = draftPlain(d); try{ navigator.clipboard.writeText(txt); }catch(e){} toast('Kopyalandı'); }
+  else if(a==='undo'){ d.status='pending'; delete d.reason; S.qTab='pending'; render(); }
+  else if(a==='back'){ S.mobileDetail=false; render(); }
+  else if(a==='stop') toast('Prototipte çalıştırma durdurulmaz');
+});
+document.addEventListener('keydown', e => {
+  if(e.key==='Enter' && e.target.matches('tr[data-go]')){ location.hash = e.target.dataset.go; }
+  if((e.key==='Enter'||e.key===' ') && e.target.matches('.cite')){ e.preventDefault(); e.target.click(); }
+  if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); openPal(); return; }
+  const typing = e.target.matches('input,textarea');
+  if(e.key==='Escape' && S.route==='onay' && (S.edit||S.rejecting)){ S.edit=S.rejecting=false; render(); return; }
+  if(typing || e.metaKey || e.ctrlKey || e.altKey || S.route!=='onay' || $('#pal').open) return;
+  const k = e.key.toLowerCase();
+  if(k==='j'||e.key==='ArrowDown'){ if(e.target.closest('.q-items')||k==='j'){ e.preventDefault(); move(1); } }
+  else if(k==='k'||e.key==='ArrowUp'){ if(e.target.closest('.q-items')||k==='k'){ e.preventDefault(); move(-1); } }
+  else if(k==='a') decide('approved');
+  else if(k==='r'){ const d = DRAFTS.find(x=>x.id===S.sel); if(d?.status==='pending'){ S.rejecting=true; render(); } }
+  else if(k==='e'){ const d = DRAFTS.find(x=>x.id===S.sel); if(d?.status==='pending'){ e.preventDefault(); S.edit=true; render(); $('#editor')?.focus(); } }
+});
+
+/* ===== komut paleti ===== */
+const CMDS = [['Genel bakış','#/genel','home'],['Çalıştırma #218 ayrıntısı','#/calisma/218','play'],['Onay kuyruğu','#/onay','check'],['Temayı değiştir',null,'moon']];
+let palSel = 0;
+function drawPal(){
+  const q = $('#palIn').value.trim().toLocaleLowerCase('tr');
+  const items = CMDS.filter(c => c[0].toLocaleLowerCase('tr').includes(q));
+  palSel = Math.min(palSel, Math.max(0, items.length-1));
+  $('#palList').innerHTML = items.length ? items.map((c,i)=>`<li><button type="button" role="option" data-pal="${CMDS.indexOf(c)}" aria-selected="${i===palSel}">${ic(c[2])}${c[0]}<span>${c[1]?'Git':'İşlem'}</span></button></li>`).join('') : '<li class="none">Sonuç yok. Başka bir ekran adı dene.</li>';
+  return items;
+}
+function openPal(){ $('#pal').showModal(); $('#palIn').value=''; palSel=0; drawPal(); $('#palIn').focus(); }
+function runPal(c){ $('#pal').close(); if(c[1]) location.hash=c[1]; else $('#theme').click(); }
+$('#openPal').onclick = openPal;
+$('#palIn').addEventListener('input', () => { palSel=0; drawPal(); });
+$('#palIn').addEventListener('keydown', e => {
+  const items = drawPal();
+  if(e.key==='ArrowDown'){ e.preventDefault(); palSel=Math.min(items.length-1,palSel+1); drawPal(); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); palSel=Math.max(0,palSel-1); drawPal(); }
+  else if(e.key==='Enter' && items[palSel]){ runPal(items[palSel]); }
+});
+$('#palList').addEventListener('click', e => { const b = e.target.closest('[data-pal]'); if(b) runPal(CMDS[+b.dataset.pal]); });
+$('#pal').addEventListener('click', e => { if(e.target.id==='pal') $('#pal').close(); });
+
+route();
+</script>
+</body>
+</html>

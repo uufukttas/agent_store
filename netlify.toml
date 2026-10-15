@@ -1,0 +1,10 @@
+# Netlify build settings. This file is the source of truth; keep the UI build fields empty.
+# Next.js is detected automatically (OpenNext adapter). pnpm comes from `packageManager` via corepack.
+# Secrets (Supabase keys, ANTHROPIC_API_KEY) are set in the Netlify UI, never in this repo.
+
+[build]
+  command = "pnpm build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
