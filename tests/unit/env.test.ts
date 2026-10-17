@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parsePublicEnv, parseServerEnv } from "@/lib/env";
+import { parsePublicEnv, parseServerEnv, requireSecret } from "@/lib/env";
 
 const validPublic = {
   NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co",
@@ -73,6 +73,43 @@ describe("parseServerEnv", () => {
       parseServerEnv({ SUPABASE_SERVICE_ROLE_KEY: "", ALLOWED_EMAIL_DOMAIN: "gizli-deger@" });
     } catch (e) {
       expect(String(e)).not.toContain("gizli-deger@");
+    }
+  });
+});
+
+describe("P1 değişkenleri", () => {
+  it("bütçe verilmezse 400 sent olur", () => {
+    expect(parseServerEnv(validServer).RUN_DEFAULT_BUDGET_CENTS).toBe(400);
+    expect(
+      parseServerEnv({ ...validServer, RUN_DEFAULT_BUDGET_CENTS: "" }).RUN_DEFAULT_BUDGET_CENTS,
+    ).toBe(400);
+  });
+
+  it("bütçeyi sayıya çevirir", () => {
+    expect(
+      parseServerEnv({ ...validServer, RUN_DEFAULT_BUDGET_CENTS: "250" }).RUN_DEFAULT_BUDGET_CENTS,
+    ).toBe(250);
+  });
+
+  it.each(["abc", "5", "10001", "4.5", "-1"])("geçersiz bütçeyi reddeder: %s", (v) => {
+    expect(() => parseServerEnv({ ...validServer, RUN_DEFAULT_BUDGET_CENTS: v })).toThrow(
+      /RUN_DEFAULT_BUDGET_CENTS/,
+    );
+  });
+
+  it("kısa gizli anahtarı reddeder, boşu eksik sayar", () => {
+    expect(() => parseServerEnv({ ...validServer, CRON_SECRET: "kisa" })).toThrow(/CRON_SECRET/);
+    expect(parseServerEnv({ ...validServer, CRON_SECRET: "" }).CRON_SECRET).toBeUndefined();
+  });
+
+  it("requireSecret: değer varsa döner, yoksa adını söyler, değeri sızdırmaz", () => {
+    const secret = "a".repeat(20);
+    expect(requireSecret("CRON_SECRET", { ...validServer, CRON_SECRET: secret })).toBe(secret);
+    expect(() => requireSecret("ANTHROPIC_API_KEY", validServer)).toThrow(/ANTHROPIC_API_KEY/);
+    try {
+      requireSecret("CRON_SECRET", { ...validServer, CRON_SECRET: "kisa" });
+    } catch (e) {
+      expect(String(e)).not.toContain("kisa\n");
     }
   });
 });
