@@ -28,6 +28,11 @@ describe("migration kuralları", () => {
     expect(code).toMatch(re);
   });
 
+  it.each(tables.map((t) => t.name))("%s: anon ve authenticated yetkileri geri alınmış", (name) => {
+    const re = new RegExp(`revoke all on public\\.${name}\\s+from anon, authenticated`, "i");
+    expect(code).toMatch(re);
+  });
+
   it.each(tables.filter((t) => t.name !== "orgs").map((t) => [t.name, t.body] as const))(
     "%s: org_id alanı var",
     (_name, body) => {
