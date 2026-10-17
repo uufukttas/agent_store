@@ -1,10 +1,24 @@
 # GradeUp Agent Platformu — Başlangıç Planı
 
 > **P0 notu (2026-10-15):** Bu belge repoya `plan.md` olarak taşındı, içerik özgün planla aynıdır. Alınan kararlar `docs/adr/` altındadır (0001–0003). Tasarım prototipi `docs/tasarim/prototip/index.html`. Yapılacak kararlar için "Açık sorular" bölümüne bakın.
+>
+> **Kapsam notu (2026-10-17):** Ürün tanımı "müşteri bulma aracı"ndan "otomasyon agent paneli"ne genişletildi; müşteri bulma birinci pakettir. Ayrıntı Context bölümünde, ADR 0005 ile kayda geçecek (0004 tasarım sistemine ayrılmış).
 
 ## Context
 
-Web sitesi lansmana hazır. Sıradaki iş GradeUp'ın kendi agent platformu: ekibin **doğal dille tarif ederek agent oluşturduğu, çalıştırdığı ve izlediği bir panel**. İlk kullanıcı GradeUp ekibinin kendisi, ilk iş alanı **müşteri bulma**. Bu aşama hem ekibin tecrübe kazanacağı bir alan hem de sistemin sahadaki ilk denemesi. Sonraki aşamalarda üzerine daha ince ayarlı sistemler kurulacak, ileride müşterilere açılacak.
+Web sitesi lansmana hazır. Sıradaki iş GradeUp'ın kendi agent platformu: ekibin **doğal dille tarif ederek agent oluşturduğu, çalıştırdığı ve izlediği bir panel**. Ürün, otomatize edilmesi gereken süreçlerin geneli için bir **otomasyon agent paneli**dir; yalnızca müşteri bulmaya özel değildir. İlk kullanıcı GradeUp ekibinin kendisi, ilk iş alanı (**birinci paket**) **müşteri bulma**. Bu aşama hem ekibin tecrübe kazanacağı bir alan hem de sistemin sahadaki ilk denemesi. Sonraki aşamalarda başka iş alanları paket olarak eklenecek, ileride müşterilere açılacak.
+
+### Ürün çerçevesi: iki katman
+
+1. **Platform çekirdeği (iş alanından bağımsız):** agent ve versiyonlar, çalıştırmalar, araç kataloğu, onay kuyruğu, bütçe ve zamanlama, maliyet kaydı (`usage_ledger`), `org_id`.
+2. **Alan paketleri:** her paket kendi araçlarını, kayıt türlerini ve ekranlarını getirir. **Birinci paket müşteri bulma:** `save_lead`, `draft_outreach`, `log_reply_classification`, Lead'ler ekranı. Yeni bir otomasyon için yeni uygulama yazılmaz; mevcut araçlarla agent tarif edilir ya da kataloğa araç eklenir.
+
+İlkeler:
+- **Araç risk seviyeleri:** salt okuma (serbest), iç yazma (serbest, loglanır), dış etkili (e-posta gönderme, ödeme, dış sistem güncelleme: her zaman insan onayı). "Hiçbir şey kendiliğinden gönderilmez" kuralı tüm paketler için geçerlidir.
+- **Başarı ölçütü agent'a aittir:** "maliyet / başarılı çıktı"; neyin başarı sayıldığını AgentSpec tanımlar. Müşteri bulmada bu "maliyet / lead" ve "maliyet / onaylanan taslak"tır.
+- **Soyutlama ikinci kullanım alanı görülene kadar çekirdekte tutulur:** ortak model yalnızca çekirdeğin ihtiyacı kadar genel olur, alan verisi paket içinde kalır.
+- **Kabul hâlâ somut bir işle yapılır** (P1: 20 şirketlik çalıştırma); genel hedef P1'i geciktirmez.
+- Dış sistemlere bağlanma (CRM, e-posta, ERP) kimlik bilgisi saklama ve bağlayıcı konularını açar; bu ayrı bir ADR ve onay gerektirir.
 
 Bilinenler:
 - **Repo:** Kullanıcı kendisi kuracak (private). Bu plan, repo hazır olunca oraya `plan.md` ve ADR'lar olarak taşınır. Web sitesi reposuna dokunulmaz.
